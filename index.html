@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>রকমারি কালেকশন</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Noto Sans Bengali', sans-serif; margin: 0; background: #fff0f5; }
+header { background-color: #d63384; color: white; padding: 2px 8px; display: flex; align-items: center; justify-content: space-between; height: 34px; font-size: 27px; }
+header img.logo { height: 40px; margin-left: 10px; }
+nav { display: flex; gap: 5px; }
+nav a { color: white; text-decoration: none; font-weight: 500; padding: 2px 6px; border-radius: 4px; transition: background-color 0.3s ease; font-size: 12px; line-height: 1; }
+nav a:hover { background-color: rgba(255, 255, 255, 0.2); }
+.products { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; padding: 20px; }
+.product { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; text-align: center; }
+.slider { position: relative; overflow: hidden; border-radius: 8px; height: 220px; }
+.slides { display: flex; transition: transform 0.5s ease-in-out; }
+.slides img { width: 100%; flex-shrink: 0; object-fit: cover; border-radius: 8px; }
+.prev, .next { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 50%; font-size: 18px; }
+.prev { left: 10px; }
+.next { right: 10px; }
+.cart { background: white; padding: 20px; border-radius: 10px; max-width: 700px; margin: 0 auto 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.cart-items { margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
+.cart-item-box { display: flex; align-items: center; gap: 10px; background: #f9f9f9; padding: 10px; border-radius: 8px; flex-wrap: wrap; }
+.cart-img { width: 60px; height: 60px; flex-shrink: 0; border-radius: 6px; object-fit: cover; }
+.cart-details { flex-grow: 1; min-width: 0; }
+.cart-title { font-weight: bold; font-size: 15px; margin-bottom: 5px; word-break: break-word; }
+.cart-actions { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
+.cart-actions button { padding: 4px 8px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+.qty-btn { background-color: #007bff; color: white; }
+.remove-btn { background-color: #dc3545; color: white; }
+.subtotal { text-align: right; font-size: 16px; font-weight: bold; margin-top: 10px; }
+form input, form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Noto Sans Bengali', sans-serif; }
+form button { background: #d63384; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; }
+.whatsapp { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 15px; border-radius: 50px; text-decoration: none; font-weight: bold; }
+button.add-cart { background-color: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-top: 5px; }
+.toast { visibility: hidden; min-width: 250px; background-color: #28a745; color: white; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 9999; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.5s ease-in-out, bottom 0.5s ease-in-out; font-family: 'Noto Sans Bengali', sans-serif; }
+.toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+</style>
+</head>
+<body>
+<div>
+  <img src="https://drive.google.com/thumbnail?id=1Nyk0pYbBYjf28uIW-nx2wZvTJUHoD3rj" class="logo" alt="Logo">
+</div>
+<header>
+<nav>
+<a href="#products">Products</a>
+<a href="#cart">See Cart</a>
+<a href="#order">Place Order</a>
+<a href="#order">About</a>
+</nav>
+</header>
+<section id="products" class="products"></section>
+<section id="cart" class="cart">
+<h2>Shopping Cart (বাছাইকৃত পণ্য)</h2>
+<div class="cart-items" id="cart-items"></div>
+<div class="subtotal">Sub Total: <span id="total-price">৳0</span></div>
+</section>
+<section id="order" class="cart">
+<h2>অর্ডার ফর্ম</h2>
+<form id="order-form">
+<input type="text" name="name" placeholder="আপনার নাম" required />
+<input type="text" name="phone" placeholder="মোবাইল নম্বর" required />
+<input type="text" name="address" placeholder="ঠিকানা" required />
+<textarea name="notes" placeholder="অতিরিক্ত তথ্য"></textarea>
+<input type="hidden" name="cartData" id="cartData">
+<button type="submit">অর্ডার কনফার্ম করুন</button>
+</form>
+</section>
+<a class="whatsapp" href="https://wa.me/message/RTGCDM22L5XMB1" target="_blank">WhatsApp</a>
+<div id="toast" class="toast"></div>
+<script>
+const products = [
+  { name: 'সুতির থ্রিপিস', price: 1299, images: ['https://i.ibb.co/Fb74L2nV/3-pcs-Suti.jpg','https://i.ibb.co/Fb74L2nV/3-pcs-Suti.jpg','https://i.ibb.co/Fb74L2nV/3-pcs-Suti.jpg'] },
+  { name: 'জর্জেট থ্রিপিস', price: 1499, images: ['https://iili.io/FVgZq1S.jpg','https://iili.io/FVgpcbe.jpg','https://iili.io/FVgpwe1.jpg','https://iili.io/FVgpuf4.md.jpg','https://iili.io/FVgpA0l.md.jpg'] },
+  { name: 'শাড়ি', price: 850, images: ['https://i.ibb.co/Fb74L2nV/3-pcs-Suti.jpg'] },
+  { name: 'কুর্তি', price: 750, images: ['https://i.ibb.co/Fb74L2nV/3-pcs-Suti.jpg'] },
+  { name: 'হিজাব', price: 250, images: ['https://i.ibb.co/Fb74L2nV/3-pcs-Suti.jpg'] },
+  { name: 'বোরকা', price: 1800, images: ['https://i.ibb.co/Fb74L2nV/3-pcs-Suti.jpg'] }
+];
+const cart = [];
+const currentIndex = Array(products.length).fill(0);
+function renderProducts() {
+const container = document.getElementById('products');
+products.forEach((product, index) => {
+const div = document.createElement('div');
+div.className = 'product';
+div.innerHTML = `
+<div class="slider" id="slider-${index}">
+<div class="slides">
+${product.images.map(img => `<img src="${img}" alt="${product.name}">`).join('')}
+</div>
+${product.images.length > 1 ? `<button class="prev" onclick="changeSlide(${index}, -1)">&#10094;</button><button class="next" onclick="changeSlide(${index}, 1)">&#10095;</button>` : ''}
+</div>
+<h3>${product.name}</h3>
+<p>৳${product.price}</p>
+<input type="number" min="1" value="1" id="qty-${index}" style="width:60px;">
+<button class="add-cart" onclick="addToCart(${index})">Add to Cart</button>
+`;
+container.appendChild(div);
+});
+}
+function changeSlide(prodIndex, direction) {
+const slider = document.querySelector(`#slider-${prodIndex} .slides`);
+const total = products[prodIndex].images.length;
+currentIndex[prodIndex] = (currentIndex[prodIndex] + direction + total) % total;
+slider.style.transform = `translateX(-${currentIndex[prodIndex] * 100}%)`;
+}
+function addToCart(index) {
+const qty = parseInt(document.getElementById(`qty-${index}`).value);
+const existing = cart.find(p => p.name === products[index].name);
+const selectedImage = products[index].images[currentIndex[index]];
+if (existing) {
+existing.qty += qty;
+existing.selectedImage = selectedImage;
+} else {
+cart.push({ name: products[index].name, price: products[index].price, qty: qty, selectedImage });
+}
+updateCart();
+}
+function updateCart() {
+const container = document.getElementById('cart-items');
+const total = document.getElementById('total-price');
+container.innerHTML = '';
+let sum = 0;
+cart.forEach((item, idx) => {
+const div = document.createElement('div');
+div.className = 'cart-item-box';
+div.innerHTML = `
+<img src="${item.selectedImage}" class="cart-img" alt="${item.name}">
+<div class="cart-details">
+<div class="cart-title">${item.name}</div>
+<div class="cart-actions">
+<button class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+<span>${item.qty}</span>
+<button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
+<span>৳${item.price * item.qty}</span>
+<button class="remove-btn" onclick="removeItem(${idx})">Remove</button>
+</div>
+</div>`;
+container.appendChild(div);
+sum += item.price * item.qty;
+});
+total.innerHTML = '৳ ' + Number(sum).toLocaleString('en-BD');
+document.getElementById('cartData').value = JSON.stringify(cart);
+}
+function changeQty(index, delta) {
+if (cart[index]) {
+cart[index].qty += delta;
+if (cart[index].qty <= 0) cart.splice(index, 1);
+updateCart();
+}
+}
+function removeItem(index) {
+cart.splice(index, 1);
+updateCart();
+}
+function showToast(message, color = '#28a745') {
+const toast = document.getElementById('toast');
+toast.textContent = message;
+toast.style.backgroundColor = color;
+toast.className = 'toast show';
+setTimeout(() => { toast.className = 'toast'; }, 3000);
+}
+document.getElementById('order-form').addEventListener('submit', function(e) {
+e.preventDefault();
+if (cart.length === 0) {
+showToast('Kindly add at least 1 item in cart!', '#dc3545');
+return;
+}
+const url = 'https://script.google.com/macros/s/AKfycbwSwOKxlXxiTELd5MhGpmxQH00cWkoZydbENOUGo4-gPntjZrvCk_z53uhG3Liec-vh/exec';
+const form = this;
+const formData = new URLSearchParams(new FormData(form)).toString();
+fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData })
+.then(response => response.text())
+.then(text => {
+if (text === "Success") {
+showToast('Thanks, Your Order Placed Successfully!');
+form.reset();
+cart.length = 0;
+updateCart();
+} else {
+showToast('Error Try again: ' + text, '#dc3545');
+}
+})
+.catch(err => showToast('Error: ' + err.message, '#dc3545'));
+});
+renderProducts();
+</script>
+</body>
+</html>
