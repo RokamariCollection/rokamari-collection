@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>রকমারি কালেকশন</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" href="Fav icon Rokamari.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="Fav icon Rokamari.png" />
 <style>
 body { font-family: 'Noto Sans Bengali', sans-serif; margin: 0; background: #fff0f5; }
 header { background-color: #d63384; color: white; padding: 2px 8px; display: flex; align-items: center; justify-content: space-between; height: 34px; font-size: 27px; }
@@ -38,11 +38,50 @@ form button { background: #d63384; color: white; padding: 10px; border: none; bo
 button.add-cart { background-color: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-top: 5px; }
 .toast { visibility: hidden; min-width: 250px; background-color: #28a745; color: white; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 9999; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.5s ease-in-out, bottom 0.5s ease-in-out; font-family: 'Noto Sans Bengali', sans-serif; }
 .toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+
+.details-link {
+  color: #d63384;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+  display: inline-block;
+  margin: 8px 0;
+}
+
+#details-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+#details-modal .modal-content {
+  background: white;
+  border-radius: 10px;
+  max-width: 400px;
+  width: 90%;
+  padding: 20px;
+  position: relative;
+  font-family: 'Noto Sans Bengali', sans-serif;
+}
+
+#details-modal .close-btn {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  color: #d63384;
+}
 </style>
 </head>
 <body>
 <div>
-  <img src="https://drive.google.com/thumbnail?id=1Nyk0pYbBYjf28uIW-nx2wZvTJUHoD3rj" class="logo" alt="Logo">
+  <img src="https://drive.google.com/thumbnail?id=1Nyk0pYbBYjf28uIW-nx2wZvTJUHoD3rj" class="logo" alt="Logo" />
 </div>
 <header>
 <nav>
@@ -59,139 +98,250 @@ button.add-cart { background-color: #28a745; color: white; border: none; padding
 <div class="subtotal">Sub Total: <span id="total-price">৳0</span></div>
 </section>
 <section id="order" class="cart">
-<h2>অর্ডার ফর্ম</h2>
+<h2>অর্ডার ফর্ম <span style="font-size:18px; font-weight:normal;"> (সম্পূর্ণ Cash on হোম ডেলিভারি) </span></h2>
 <form id="order-form">
 <input type="text" name="name" placeholder="আপনার নাম" required />
 <input type="text" name="phone" placeholder="মোবাইল নম্বর" required />
 <input type="text" name="address" placeholder="ঠিকানা" required />
 <textarea name="notes" placeholder="অতিরিক্ত তথ্য"></textarea>
-<input type="hidden" name="cartData" id="cartData">
+<input type="hidden" name="cartData" id="cartData" />
 <button type="submit">অর্ডার কনফার্ম করুন</button>
 </form>
 </section>
 <a class="whatsapp" href="https://wa.me/message/RTGCDM22L5XMB1" target="_blank">WhatsApp</a>
+
+<!-- Details Modal -->
+<div id="details-modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal()">&times;</span>
+    <h3 id="modal-title"></h3>
+    <p id="modal-description" style="white-space: pre-line;"></p>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
+
 <script>
 const products = [
-  { name: 'আড়ং কটন থ্রিপিস', price: 950, images: ['https://iili.io/FVgZq1S.jpg','https://iili.io/FVgpcbe.jpg','https://iili.io/FVgpwe1.jpg','https://iili.io/FVgpuf4.md.jpg','https://iili.io/FVgpA0l.md.jpg'] },
-  { name: 'বাটিক সুতি থ্রিপিস', price: 900, images: ['https://iili.io/FV65yIS.md.jpg','https://iili.io/FV65PLX.jpg','https://iili.io/FV65L1s.jpg','https://iili.io/FV65QrG.jpg','https://iili.io/FV65sBn.jpg'] },
-  { name: 'ব্লক সুতি থ্রিপিস', price: 900, images: ['https://iili.io/FV6a01n.md.jpg','https://iili.io/FV6a1gs.md.jpg','https://iili.io/FV6aGdG.jpg','https://iili.io/FV6aVe4.jpg'] },
-  { name: 'সুইচ কটন থ্রিপিস', price: 800, images: ['https://iili.io/FV6WLEQ.jpg','https://iili.io/FV6WsCx.jpg','https://iili.io/FV6WPQj.jpg','https://iili.io/FV6WQ4V.jpg'] },
-  { name: 'বুটিক্স সুতি থ্রিপিস', price: 750, images: ['https://iili.io/FV6GDYX.md.jpg','https://iili.io/FV6GQ4I.md.jpg','https://iili.io/FV6M9jf.md.jpg','https://iili.io/FV6MK37.md.jpg','https://iili.io/FV6Gt2t.md.jpg','https://iili.io/FV6GsBp.md.jpg'] }
+  { 
+    name: 'আড়ং কটন থ্রিপিস', 
+    price: 950, 
+    images: [
+      'https://iili.io/FVgZq1S.jpg',
+      'https://iili.io/FVgpcbe.jpg',
+      'https://iili.io/FVgpwe1.jpg',
+      'https://iili.io/FVgpuf4.md.jpg',
+      'https://iili.io/FVgpA0l.md.jpg'
+    ],
+    details: `সাইজ: ফ্রি
+কাপড়: কটন
+কালার: ৫টি
+স্টক: ১২ পিস`
+  },
+  { 
+    name: 'বাটিক সুতি থ্রিপিস', 
+    price: 900, 
+    images: [
+      'https://iili.io/FV65yIS.md.jpg',
+      'https://iili.io/FV65PLX.jpg',
+      'https://iili.io/FV65L1s.jpg',
+      'https://iili.io/FV65QrG.jpg',
+      'https://iili.io/FV65sBn.jpg'
+    ],
+    details: `সাইজ: ফ্রি
+কাপড়: সুতি
+কালার: ৩টি
+স্টক: ৮ পিস`
+  },
+  { 
+    name: 'ব্লক সুতি থ্রিপিস', 
+    price: 900, 
+    images: [
+      'https://iili.io/FV6a01n.md.jpg',
+      'https://iili.io/FV6a1gs.md.jpg',
+      'https://iili.io/FV6aGdG.jpg',
+      'https://iili.io/FV6aVe4.jpg'
+    ],
+    details: `সাইজ: ফ্রি
+কাপড়: ব্লক সুতি
+কালার: ৪টি
+স্টক: ১০ পিস`
+  },
+  { 
+    name: 'সুইচ কটন থ্রিপিস', 
+    price: 800, 
+    images: [
+      'https://iili.io/FV6WLEQ.jpg',
+      'https://iili.io/FV6WsCx.jpg',
+      'https://iili.io/FV6WPQj.jpg',
+      'https://iili.io/FV6WQ4V.jpg'
+    ],
+    details: `সাইজ: ফ্রি
+কাপড়: সুইচ কটন
+কালার: ৩টি
+স্টক: ৯ পিস`
+  },
+  { 
+    name: 'বুটিক্স সুতি থ্রিপিস', 
+    price: 750, 
+    images: [
+      'https://iili.io/FV6GDYX.md.jpg',
+      'https://iili.io/FV6GQ4I.md.jpg',
+      'https://iili.io/FV6M9jf.md.jpg',
+      'https://iili.io/FV6MK37.md.jpg',
+      'https://iili.io/FV6Gt2t.md.jpg',
+      'https://iili.io/FV6GsBp.md.jpg'
+    ],
+    details: `সাইজ: ফ্রি
+কাপড়: বুটিক্স সুতি
+কালার: ৬টি
+স্টক: ১৫ পিস`
+  }
 ];
+
 const cart = [];
 const currentIndex = Array(products.length).fill(0);
+
 function renderProducts() {
-const container = document.getElementById('products');
-products.forEach((product, index) => {
-const div = document.createElement('div');
-div.className = 'product';
-div.innerHTML = `
-<div class="slider" id="slider-${index}">
-<div class="slides">
-${product.images.map(img => `<img src="${img}" alt="${product.name}">`).join('')}
-</div>
-${product.images.length > 1 ? `<button class="prev" onclick="changeSlide(${index}, -1)">&#10094;</button><button class="next" onclick="changeSlide(${index}, 1)">&#10095;</button>` : ''}
-</div>
-<h3>${product.name}</h3>
-<p>৳${product.price}</p>
-<input type="number" min="1" value="1" id="qty-${index}" style="width:60px;">
-<button class="add-cart" onclick="addToCart(${index})">Add to Cart</button>
-`;
-container.appendChild(div);
-});
+  const container = document.getElementById('products');
+  container.innerHTML = '';  // পরিষ্কার করে নতুন করে তৈরি করা
+  products.forEach((product, index) => {
+    const div = document.createElement('div');
+    div.className = 'product';
+    div.innerHTML = `
+      <div class="slider" id="slider-${index}">
+        <div class="slides">
+          ${product.images.map(img => `<img src="${img}" alt="${product.name}">`).join('')}
+        </div>
+        ${product.images.length > 1 ? `
+          <button class="prev" onclick="changeSlide(${index}, -1)">&#10094;</button>
+          <button class="next" onclick="changeSlide(${index}, 1)">&#10095;</button>` : ''}
+      </div>
+      <h3>${product.name}</h3>
+      <p>৳${product.price}</p>
+      <a href="#" class="details-link" onclick="showDetails(${index}); return false;">Details</a>
+      <br>
+      <input type="number" min="1" value="1" id="qty-${index}" style="width:60px;" />
+      <button class="add-cart" onclick="addToCart(${index})">Add to Cart</button>
+    `;
+    container.appendChild(div);
+  });
 }
+
 function changeSlide(prodIndex, direction) {
-const slider = document.querySelector(`#slider-${prodIndex} .slides`);
-const total = products[prodIndex].images.length;
-currentIndex[prodIndex] = (currentIndex[prodIndex] + direction + total) % total;
-slider.style.transform = `translateX(-${currentIndex[prodIndex] * 100}%)`;
+  const slider = document.querySelector(`#slider-${prodIndex} .slides`);
+  const total = products[prodIndex].images.length;
+  currentIndex[prodIndex] = (currentIndex[prodIndex] + direction + total) % total;
+  slider.style.transform = `translateX(-${currentIndex[prodIndex] * 100}%)`;
 }
+
 function addToCart(index) {
-const qty = parseInt(document.getElementById(`qty-${index}`).value);
-const existing = cart.find(p => p.name === products[index].name);
-const selectedImage = products[index].images[currentIndex[index]];
-if (existing) {
-existing.qty += qty;
-existing.selectedImage = selectedImage;
-} else {
-cart.push({ name: products[index].name, price: products[index].price, qty: qty, selectedImage });
+  const qty = parseInt(document.getElementById(`qty-${index}`).value);
+  const existing = cart.find(p => p.name === products[index].name);
+  const selectedImage = products[index].images[currentIndex[index]];
+  if (existing) {
+    existing.qty += qty;
+    existing.selectedImage = selectedImage;
+  } else {
+    cart.push({ name: products[index].name, price: products[index].price, qty: qty, selectedImage });
+  }
+  updateCart();
 }
-updateCart();
-}
+
 function updateCart() {
-const container = document.getElementById('cart-items');
-const total = document.getElementById('total-price');
-container.innerHTML = '';
-let sum = 0;
-cart.forEach((item, idx) => {
-const div = document.createElement('div');
-div.className = 'cart-item-box';
-div.innerHTML = `
-<img src="${item.selectedImage}" class="cart-img" alt="${item.name}">
-<div class="cart-details">
-<div class="cart-title">${item.name}</div>
-<div class="cart-actions">
-<button class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
-<span>${item.qty}</span>
-<button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
-<span>৳${item.price * item.qty}</span>
-<button class="remove-btn" onclick="removeItem(${idx})">Remove</button>
-</div>
-</div>`;
-container.appendChild(div);
-sum += item.price * item.qty;
-});
-total.innerHTML = '৳ ' + Number(sum).toLocaleString('en-BD');
-document.getElementById('cartData').value = JSON.stringify(cart);
+  const container = document.getElementById('cart-items');
+  const total = document.getElementById('total-price');
+  container.innerHTML = '';
+  let sum = 0;
+  cart.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'cart-item-box';
+    div.innerHTML = `
+      <img src="${item.selectedImage}" class="cart-img" alt="${item.name}" />
+      <div class="cart-details">
+        <div class="cart-title">${item.name}</div>
+        <div class="cart-actions">
+          <button class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+          <span>${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
+          <span>৳${item.price * item.qty}</span>
+          <button class="remove-btn" onclick="removeItem(${idx})">Remove</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+    sum += item.price * item.qty;
+  });
+  total.innerHTML = '৳ ' + Number(sum).toLocaleString('en-BD');
+  document.getElementById('cartData').value = JSON.stringify(cart);
 }
+
 function changeQty(index, delta) {
-if (cart[index]) {
-cart[index].qty += delta;
-if (cart[index].qty <= 0) cart.splice(index, 1);
-updateCart();
+  if (cart[index]) {
+    cart[index].qty += delta;
+    if (cart[index].qty <= 0) cart.splice(index, 1);
+    updateCart();
+  }
 }
-}
+
 function removeItem(index) {
-cart.splice(index, 1);
-updateCart();
+  cart.splice(index, 1);
+  updateCart();
 }
+
 function showToast(message, color = '#28a745') {
-const toast = document.getElementById('toast');
-toast.textContent = message;
-toast.style.backgroundColor = color;
-toast.className = 'toast show';
-setTimeout(() => { toast.className = 'toast'; }, 3000);
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.style.backgroundColor = color;
+  toast.className = 'toast show';
+  setTimeout(() => {
+    toast.className = 'toast';
+  }, 3000);
 }
+
 document.getElementById('order-form').addEventListener('submit', function(e) {
-e.preventDefault();
-if (cart.length === 0) {
-showToast('Kindly add at least 1 item in cart!', '#dc3545');
-return;
-}
-const url = 'https://script.google.com/macros/s/AKfycbwSwOKxlXxiTELd5MhGpmxQH00cWkoZydbENOUGo4-gPntjZrvCk_z53uhG3Liec-vh/exec';
-const form = this;
-const formData = new URLSearchParams(new FormData(form)).toString();
-fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData })
-.then(response => response.text())
-.then(text => {
-if (text === "Success") {
-showToast('Thanks, Your Order Placed Successfully!');
-form.reset();
-cart.length = 0;
-updateCart();
-} else {
-showToast('Error Try again: ' + text, '#dc3545');
-}
-})
-.catch(err => showToast('Error: ' + err.message, '#dc3545'));
+  e.preventDefault();
+  if (cart.length === 0) {
+    showToast('Kindly add at least 1 item in cart!', '#dc3545');
+    return;
+  }
+  const url = 'https://script.google.com/macros/s/AKfycbwSwOKxlXxiTELd5MhGpmxQH00cWkoZydbENOUGo4-gPntjZrvCk_z53uhG3Liec-vh/exec';
+  const form = this;
+  const formData = new URLSearchParams(new FormData(form)).toString();
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData
+  })
+    .then(response => response.text())
+    .then(text => {
+      if (text === 'Success') {
+        showToast('Thanks, Your Order Placed Successfully!');
+        form.reset();
+        cart.length = 0;
+        updateCart();
+      } else {
+        showToast('Error Try again: ' + text, '#dc3545');
+      }
+    })
+    .catch(err => showToast('Error: ' + err.message, '#dc3545'));
 });
+
+function showDetails(index) {
+  document.getElementById('modal-title').innerText = products[index].name;
+  document.getElementById('modal-description').innerText = products[index].details;
+  document.getElementById('details-modal').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('details-modal').style.display = 'none';
+}
+
 renderProducts();
 </script>
-  <br>
-  <p>
-    <strong>জরুরী প্রয়োজনে : </strong>
-    01580618469  |  01814576056
-  </p>
+
+<p>
+  <strong>জরুরী প্রয়োজনে : </strong>
+  01580618469  |  01814576056
+</p>
 </body>
 </html>
